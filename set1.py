@@ -1,30 +1,32 @@
-d={"E":12.02,
-" ": 15.00,
-"T": 9.10,
-"A": 8.12,
-"O": 7.68,
-"I": 7.31,
-"N": 6.95,
-"S": 6.28,
-"R": 6.02,
-"H": 5.92,
-"D": 4.32,
-"L": 3.98,
-"U": 2.88,
-"C": 2.71,
-"M": 2.61,
-"F": 2.30,
-"Y": 2.11,
-"W": 2.09,
-"G": 2.03,
-"P": 1.82,
-"B": 1.49,
-"V": 1.11,
-"K": 0.69,
-"X": 0.17,
-"Q": 0.11,
-"J": 0.10,
-"Z": 0.07}
+d={
+   " ": 23.00,
+   "E": 12.02,
+   "T":  9.10,
+   "A":  8.12,
+   "O":  7.68,
+   "I":  7.31,
+   "N":  6.95,
+   "S":  6.28,
+   "R":  6.02,
+   "H":  5.92,
+   "D":  4.32,
+   "L":  3.98,
+   "U":  2.88,
+   "C":  2.71,
+   "M":  2.61,
+   "F":  2.30,
+   "Y":  2.11,
+   "W":  2.09,
+   "G":  2.03,
+   "P":  1.82,
+   "B":  1.49,
+   "V":  1.11,
+   "K":  0.69,
+   "X":  0.17,
+   "Q":  0.11,
+   "J":  0.10,
+   "Z":  0.07
+}
 
 def hamming(a,b):
 	return bin(int(a.encode("hex"),16)^int(b.encode("hex"),16))[2:].count("1")
@@ -37,6 +39,8 @@ def normham(s,l):
 	return ham
 def score(s):
 	return sum(map(lambda y:d.get(y,0),s.upper()))
+
+#set1
 
 def c1(s):
 	return s.decode("hex").encode("base64")
@@ -61,8 +65,7 @@ def c5(a,b):
 	return ''.join([chr(ord(a[i])^ord(b[i%len(b)])) for i in xrange(len(a))]).encode("hex")
 def c6():
 	msg=''.join(file("6.txt").read().split()).decode("base64")
-	#msg=file("enc.enc").read()
-	msg="RIVXR ITWZV OHVFM HVBMV HFVHC GLHEG RZHVR VS"
+	
 	keylen=1;
 	for i in xrange(2,30):
 		keylen=min(keylen,i, key=lambda y:normham(msg,y))
@@ -81,6 +84,7 @@ def c7():
 	msg=''.join(file("7.txt").read().split()).decode("base64")
 	aes=AES.new("YELLOW SUBMARINE",AES.MODE_ECB)
 	print aes.decrypt(msg)
+
 def c8():
 	from Crypto.Cipher import AES
 	f=file("8.txt").read().split()
@@ -90,6 +94,9 @@ def c8():
 				print i
 				return 1
 	return 0
+
+#set2
+
 def c9(s,l):
 	return (s+chr((l-len(s)))*(l-len(s)))
 def c10():
@@ -133,12 +140,12 @@ def cbcde(data,key,iv="\x00"*16):
 	from Crypto.Cipher import AES
 	a=AES.new(key,AES.MODE_ECB)
 	prev=iv
-	enc=''
+	de=''
 	for i in xrange(0,len(data),16):
 		temp=data[i:i+16]
-		enc+=xor(prev,a.decrypt(temp))
+		de+=xor(prev,a.decrypt(temp))
 		prev=temp
-	return enc
+	return de
 
 def genbyte(l):
 	from random import randint
@@ -262,7 +269,7 @@ def c14():
 		pass
 
 def c15(data):
-	for i in xrange(15,-1,-1):
+	for i in xrange(16,-1,-1):
 		if data[-i:]==chr(i)*i:
 			return True
 	return False
@@ -303,23 +310,154 @@ def c16():
 	payload=rec[:comm]+mod+rec[comm+16:]
 	print check(payload)
 
+#set3
+
 def c17():
 	key17=genkey()
-	data_list='''MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=
-MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=
-MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==
-MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==
-MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl
-MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==
-MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==
-MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=
-MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=
-MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93'''.split()
+	iv=genkey()
+	data_list='''
+				 MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=
+				 MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=
+				 MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==
+				 MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==
+				 MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl
+				 MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==
+				 MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==
+				 MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=
+				 MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=
+				 MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93
+			  '''.split()
 	def aes128():
 		from random import randint
-		data=paddata(data_list[randint(0,9)])
-		return cbcen(data,key17)
+		data=paddata(data_list[randint(0,9)].decode('base64'))
+		return cbcen(data,key17,iv)
 	def oracle(cipher):
-		msg=cbcde(cipher,key17)
+		msg=cbcde(cipher,key17,iv)
+
 		return c15(msg)
+	cipher=aes128()
+	n=len(cipher)/16
+	prev=iv
+	final=''
+	for i in xrange(n):
+		block=cipher[i*16:(1+i)*16]
+		ins=''
+		ans=''
+		for j in xrange(1,17):
+			for k in xrange(256):
+				if oracle('a'*(16-j)+chr(k)+ins+block):
+					#print repr(cbcde('a'*(16-j)+chr(k)+ins+block,key17,iv))
+					temp=k^(j)
+					ans=chr(temp)+ans
+					#print len(ins),j
+					ins=xor(ans,chr((j+1))*(j))
+					break
+		final+= xor(ans,prev)
+		prev=block
+	print unpad(final)
+
+def ctren_de(key,nonce,data):
+	from pwn import p64
+	from Crypto.Cipher import AES
+	n=len(data)/16+1
+	cipher=''
+	a=AES.new(key,AES.MODE_ECB)
+	for i in xrange(n):
+		cipher+=xor(data[16*i:16*(i+1)],a.encrypt(p64(nonce)+p64(i)))
+	return cipher
 	
+def c18():
+	msg='L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=='.decode("base64")
+	print ctren_de('YELLOW SUBMARINE',0,msg)
+
+def c19_20():
+	data_list=map(lambda x:x.decode('base64'),file('20.txt').read().split('\n')[:-2])
+	key20=genkey()
+	enc_list=[ctren_de(key20,0,i) for i in data_list]
+	n=len(min(enc_list,key=len))
+	vuln_cipherblock=''.join([i[:n] for i in enc_list])
+	file('temp','w').write(vuln_cipherblock)
+	msg=vuln_cipherblock
+	keylen=n
+	#from s1c6
+	blocks=[msg[i::keylen] for i in  xrange(keylen)]
+	fkey=[]
+	for b in blocks:
+		fkey.append(chr(c3(b.encode("hex"))[2]))
+
+	print "Most probable key    ({}):\n".format(n),repr(''.join(fkey))
+	print "Message:"
+	fkey[0]=chr(ord(fkey[0])^7) # random offset apeared for the first char
+	temp=c5(msg,fkey).decode("hex")
+	for i in xrange(len(temp)/n):
+		print temp[i*n:(i+1)*n]
+
+
+# skipping PRNG for now
+
+
+def c25():
+	key25=genkey()
+	nonce=int(genbyte(8).encode('hex'),16)
+	from sys import stdout
+	def editAPI(cipher,offset,newtext):
+		from pwn import p64
+		from Crypto.Cipher import AES
+		n=len(cipher)/16+1
+		cipher=ctren_de(key25,nonce,cipher)
+		a=AES.new(key25,AES.MODE_ECB)
+		xorstream=''
+		for i in xrange(n):
+			xorstream+=a.encrypt(p64(nonce)+p64(i))
+		cipher=cipher[:offset]+newtext+cipher[offset+len(newtext):]
+		cipher=xor(cipher,xorstream)
+		return cipher
+	data=c10()
+	cipher=ctren_de(key25,nonce,data)
+	xorstream=''
+	for offset in xrange(len(cipher)):
+		for j in xrange(256):
+			if editAPI(cipher,offset,chr(j))[offset]=='\x00':
+				xorstream+=chr(j)
+				stdout.write(xor(chr(j),cipher[offset]))
+				stdout.flush()
+				break
+	rec=xor(xorstream,cipher)
+	return rec
+
+def c26():
+	key26=genkey()
+	nonce=int(genbyte(8).encode('hex'),16)
+	def aes128(data):
+		from Crypto.Cipher import AES
+		a1="comntd1=cdwxxxg%20MCs;userdata="
+		a2=";comment2=%20like%20a%20pound%20of%20bacon"
+		return ctren_de(key26,nonce,paddata(a1+data.replace("=","").replace(";","")+a2))
+	def check(data):
+		rev=unpad(ctren_de(key26,nonce,data))
+		if ["admin","true"] in map(lambda x: x.split("="),rev.split(";")):
+			return True
+		return False
+	temp1=aes128('')
+	temp2=aes128('a')
+	offset=0
+	for i in xrange(len(temp1)):
+		if temp1[i]!=temp2[i]:
+			offset=i
+			break
+	print offset
+	init=aes128('a'*13)
+	mod=xor(xor(init[offset:offset+13],'a;admin=true;'),'a'*13)
+	payload=init[:offset]+mod+init[offset+13:]
+	print check(payload)
+
+def c27():
+	message='a'*16+'b'*16+'c'*16
+	key27=genkey()
+	cipher=cbcen(message,key27,key27)
+	cipher_mod=cipher[:16]+'\x00'*16+cipher[:16]
+	p=cbcde(cipher_mod,key27,key27)
+	key_rec=xor(p[:16],p[-16:])
+	print repr(key27)
+	print repr(key_rec)
+
