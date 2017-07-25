@@ -5,6 +5,22 @@ N = 0xffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b
 g = 2
 k = 3
 
+def xor(a,b):
+	return ''.join([chr(ord(i)^ord(j)) for i,j in zip(a,b)])
+
+def hash(d):
+	return sha256(d).hexdigest()
+
+def hmac_sha256(key,message):
+	if len(key)>64:
+		key=hash(key)
+	if len(key)<64:
+		key=key+'\x00'*(64-len(key))
+
+	opad=xor('\x5c'*64,key)
+	ipad=xor('\x36'*64,key)
+	return hash(opad+hash(ipad+message)).encode('hex')
+
 def int_to_str(n):
 	h=hex(n)[2:].strip('L')
 	return h.decode('hex')
@@ -15,16 +31,17 @@ class Server(object):
 		self.I=I
 		self.P=P
 		self.salt = urandom(8)
-		xH = sha256(self.salt+P).hexdigest()
+		xH = sha256(self.salt+self.P).hexdigest()
 		x = int(xH,16)
 		self.v=pow(g,x,N)
+		self.b = int(urandom(256).encode('hex'),16) % N
+		self.B = (k*self.v + pow(g,self.b,N)) % N
 		
 	def recv_A(self,A):
 		self.A=A
 
-	def send_B(self):
-		self.b = int(urandom(256).encode('hex'),16) % N
-		return self.salt,(k*self.v + pow(g,self.b,N)) % N
+	def send_salt_B(self):
+		return self.salt,self.B
 
 	def compute_u(self):
 		uH = sha256(int_to_str(self.A)+int_to_str(self.B)).hexdigest()
@@ -48,4 +65,27 @@ class Client(object):
 		self.I=I
 		self.P=P
 		self.a=int(urandom(256).encode('hex'),16) % N
-		
+		self.A=pow(g,self.a,N)
+
+	def send_A(self):
+		return self.A
+
+	def recv_salt_B(self,salt,B):
+		self.salt=salt
+		self.B=B
+
+	def compute_u(self):
+		uH = sha256(int_to_str(self.A)+int_to_str(self.B)).hexdigest()
+		self.u = int(uH,16)
+		self.gen_K()
+
+	def gen_K(self):
+		xH = sha256(self.salt+self.P).hexdigest()
+		x = int(xH,16)
+		S = pow(self.B - k*pow(g,x,N), self.a + self.u*x, N)
+		self.K = sha256(int_to_str(S)).hexdigest()
+
+	def validate(self,srv):
+		hmac = hmac_sha256(self.K, self.salt)
+		return srv.validate(hmac)
+
