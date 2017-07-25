@@ -43,4 +43,9 @@ class Server(object):
 
 
 class Client(object):
-	pass
+
+	def __init__(self,I,P):
+		self.I=I
+		self.P=P
+		self.a=int(urandom(256).encode('hex'),16) % N
+		
