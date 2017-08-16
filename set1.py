@@ -25,7 +25,11 @@ d={
    "X":  0.17,
    "Q":  0.11,
    "J":  0.10,
-   "Z":  0.07
+   "Z":  0.07,
+   ">":  5,
+   "<":5,
+   ".":4,
+   "%":2
 }
 
 def hamming(a,b):
@@ -64,19 +68,20 @@ def c4():
 def c5(a,b):
 	return ''.join([chr(ord(a[i])^ord(b[i%len(b)])) for i in xrange(len(a))]).encode("hex")
 def c6():
-	msg=''.join(file("6.txt").read().split()).decode("base64")
-	
+	#msg=''.join(file("6.txt").read().split()).decode("base64")
+	msg= file('flag.pdf.enc').read()
 	keylen=1;
 	for i in xrange(2,30):
 		keylen=min(keylen,i, key=lambda y:normham(msg,y))
 		print normham(msg,i),i
 	print "Most probable keylength:",keylen
 	#print msg
+	keylen = 32
 	blocks=[msg[i::keylen] for i in  xrange(keylen)]
 	fkey=[]
 	for b in blocks:
 		fkey.append(chr(c3(b.encode("hex"))[2]))
-	print "Most probable key      :",''.join(fkey)
+	print "Most probable key      :",repr(''.join(fkey))
 	print "Message:"
 	print c5(msg,fkey).decode("hex")
 def c7():

@@ -28,29 +28,25 @@ def int_to_str(n):
 
 class Server(object):
 
-	def __init__(self,I,P):
-		self.I=I
+	def __init__(self,P):
 		self.P=P
 		self.salt = urandom(8)
 		xH = sha256(self.salt+self.P).hexdigest()
 		x = int(xH,16)
 		self.v=pow(g,x,N)
 		self.b = int(urandom(256).encode('hex'),16) % N
-		self.B = (k*self.v + pow(g,self.b,N)) % N
+		self.B = (pow(g,self.b,N)) % N
+		self.u = int(urandom(16).encode('hex'),16)
 		
 	def recv_A(self,A):
 		self.A=A
 
-	def send_salt_B(self):
-		return self.salt,self.B
+	def send_data(self):
+		return self.salt,self.B,self.u
 
-	def compute_u(self):
-		uH = sha256(int_to_str(self.A)+int_to_str(self.B)).hexdigest()
-		self.u = int(uH,16)
-		self.gen_K()
 
 	def gen_K(self):
-		S=(pow(self.A,self.b,N) * pow(self.v, self.u*self.b, N)) % N
+		S=pow((self.A * pow(self.v, self.u, N)),self.b,N) 
 		self.K = sha256(int_to_str(S)).hexdigest()
 
 	def validate(self,hmac):
@@ -62,8 +58,7 @@ class Server(object):
 
 class Client(object):
 
-	def __init__(self,I,P):
-		self.I=I
+	def __init__(self,P):
 		self.P=P
 		self.a=int(urandom(256).encode('hex'),16) % N
 		self.A=pow(g,self.a,N)
@@ -71,19 +66,15 @@ class Client(object):
 	def send_A(self):
 		return self.A
 
-	def recv_salt_B(self,salt,B):
+	def recv_data(self,salt,B,u):
 		self.salt=salt
 		self.B=B
-
-	def compute_u(self):
-		uH = sha256(int_to_str(self.A)+int_to_str(self.B)).hexdigest()
-		self.u = int(uH,16)
-		self.gen_K()
+		self.u=u
 
 	def gen_K(self):
 		xH = sha256(self.salt+self.P).hexdigest()
 		x = int(xH,16)
-		S = pow(self.B - k*pow(g,x,N), self.a + self.u*x, N)
+		S = pow(self.B , self.a + self.u*x, N)
 		self.K = sha256(int_to_str(S)).hexdigest()
 
 	def validate(self,srv,hmac=None):
