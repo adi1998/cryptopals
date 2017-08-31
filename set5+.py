@@ -1,4 +1,3 @@
-
 from os import urandom
 from hashlib import sha1
 from DH import DiffieHellman
@@ -6,8 +5,6 @@ from set1 import cbcde
 from gmpy2 import invert
 import srp,srp_simple
 import sys
-
-
 
 sys.setrecursionlimit(15000)
 
@@ -410,5 +407,5 @@ def  c46():
 			print end-beg
 			time.sleep(0.02)
 		
-		
-c46()
+def c47():
+	pass
