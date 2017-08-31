@@ -1,3 +1,5 @@
+from Crypto.Cipher import AES
+
 d={
    " ": 23.00,
    "E": 12.02,
@@ -34,6 +36,7 @@ d={
 
 def hamming(a,b):
 	return bin(int(a.encode("hex"),16)^int(b.encode("hex"),16))[2:].count("1")
+
 def normham(s,l):
 	ham=0.0
 	for i in xrange(len(s)/l-1):
@@ -41,83 +44,10 @@ def normham(s,l):
 	ham=ham/(len(s)*1.0/l)
 	ham=ham/l
 	return ham
+
 def score(s):
 	return sum(map(lambda y:d.get(y,0),s.upper()))
 
-#set1
-
-def c1(s):
-	return s.decode("hex").encode("base64")
-def c2(a,b):
-	return hex(int(a,16)^int(b,16))[2:].replace("L","")
-def c3(x):
-	s=x.decode("hex")
-	m=0
-	ans=''
-	key=0
-	for i in xrange(256):
-		temp=''.join([chr(ord(j)^i) for j in s])
-		score=sum(map(lambda y:d.get(y,0),temp.upper()))
-		if score>m:
-			m=score
-			ans=temp
-			key=i
-	return ans,m,key
-def c4():
-	return max([c3(i) for i in file("4.txt").read().split()],key= lambda y:y[1])
-def c5(a,b):
-	return ''.join([chr(ord(a[i])^ord(b[i%len(b)])) for i in xrange(len(a))]).encode("hex")
-def c6():
-	#msg=''.join(file("6.txt").read().split()).decode("base64")
-	msg= file('flag.pdf.enc').read()
-	keylen=1;
-	for i in xrange(2,30):
-		keylen=min(keylen,i, key=lambda y:normham(msg,y))
-		print normham(msg,i),i
-	print "Most probable keylength:",keylen
-	#print msg
-	keylen = 32
-	blocks=[msg[i::keylen] for i in  xrange(keylen)]
-	fkey=[]
-	for b in blocks:
-		fkey.append(chr(c3(b.encode("hex"))[2]))
-	print "Most probable key      :",repr(''.join(fkey))
-	print "Message:"
-	print c5(msg,fkey).decode("hex")
-def c7():
-	from Crypto.Cipher import AES
-	msg=''.join(file("7.txt").read().split()).decode("base64")
-	aes=AES.new("YELLOW SUBMARINE",AES.MODE_ECB)
-	print aes.decrypt(msg)
-
-def c8():
-	from Crypto.Cipher import AES
-	f=file("8.txt").read().split()
-	for i in f:
-		for j in xrange(0,len(i)-32,32):
-			if i.count(i[j:j+32])>1:
-				print i
-				return 1
-	return 0
-
-#set2
-
-def c9(s,l):
-	return (s+chr((l-len(s)))*(l-len(s)))
-def c10():
-	from Crypto.Cipher import AES
-	f=''.join(file("10.txt").read().split()).decode("base64")
-	#print f
-	prev="\x00"*16
-	ans=''
-	for i in xrange(0,(len(f)/16)*16,16):
-		temp=f[i:i+16]
-		ans+=(c5(prev,AES.new("YELLOW SUBMARINE",AES.MODE_ECB).decrypt(c9(temp,16	)))).decode("hex")
-		prev=temp
-	#ans+=(c5(prev,c9(f[(len(f)/16)*16:],16))).decode("hex")
-	return ans
-
-# Challenge 11
 
 def paddata(data):
 	padlen=len(data)%16
@@ -155,8 +85,10 @@ def cbcde(data,key,iv="\x00"*16):
 def genbyte(l):
 	from random import randint
 	return ''.join([chr(randint(0,255)) for i in xrange(l)])
+
 def genkey():
 	return genbyte(16)
+
 def enc_oracle(data):
 	from random import randint
 	from Crypto.Cipher import AES
@@ -169,13 +101,113 @@ def enc_oracle(data):
 	else:
 		iv=genkey()
 		return cbcen(temp,key,iv)
+
 def ecb_cbc(data):
 	for i in data:
 		for j in xrange(0,len(i)-16,16):
 			if i.count(i[j:j+16])>1:
 				return "ECB"
 	return "CBC"
-from Crypto.Cipher import AES
+
+
+def unpad(data):
+	c=ord(data[-1])
+	if data[-c:]==c*data[-1]:
+		return data[:-c]
+	elif ord(data[-1]) in range(16):
+		raise Exception
+	else:
+		return data
+
+def ctren_de(key,nonce,data):
+	from pwn import p64
+	from Crypto.Cipher import AES
+	n=len(data)/16+1
+	cipher=''
+	a=AES.new(key,AES.MODE_ECB)
+	for i in xrange(n):
+		cipher+=xor(data[16*i:16*(i+1)],a.encrypt(p64(nonce)+p64(i)))
+	return cipher
+
+#set1
+
+def c1(s):
+	return s.decode("hex").encode("base64")
+
+def c2(a,b):
+	return hex(int(a,16)^int(b,16))[2:].replace("L","")
+
+def c3(x):
+	s=x.decode("hex")
+	m=0
+	ans=''
+	key=0
+	for i in xrange(256):
+		temp=''.join([chr(ord(j)^i) for j in s])
+		score=sum(map(lambda y:d.get(y,0),temp.upper()))
+		if score>m:
+			m=score
+			ans=temp
+			key=i
+	return ans,m,key
+
+def c4():
+	return max([c3(i) for i in file("4.txt").read().split()],key= lambda y:y[1])
+
+def c5(a,b):
+	return ''.join([chr(ord(a[i])^ord(b[i%len(b)])) for i in xrange(len(a))]).encode("hex")
+
+def c6():
+	msg=''.join(file("6.txt").read().split()).decode("base64")
+	keylen=1;
+	for i in xrange(2,30):
+		keylen=min(keylen,i, key=lambda y:normham(msg,y))
+		print normham(msg,i),i
+	print "Most probable keylength:",keylen	
+	blocks=[msg[i::keylen] for i in  xrange(keylen)]
+	fkey=[]
+	for b in blocks:
+		fkey.append(chr(c3(b.encode("hex"))[2]))
+	print "Most probable key      :",repr(''.join(fkey))
+	print "Message:"
+	print c5(msg,fkey).decode("hex")
+
+def c7():
+	from Crypto.Cipher import AES
+	msg=''.join(file("7.txt").read().split()).decode("base64")
+	aes=AES.new("YELLOW SUBMARINE",AES.MODE_ECB)
+	print aes.decrypt(msg)
+
+def c8():
+	from Crypto.Cipher import AES
+	f=file("8.txt").read().split()
+	for i in f:
+		for j in xrange(0,len(i)-32,32):
+			if i.count(i[j:j+32])>1:
+				print i
+				return 1
+	return 0
+
+#set2
+
+def c9(s,l):
+	return (s+chr((l-len(s)))*(l-len(s)))
+
+def c10():
+	from Crypto.Cipher import AES
+	f=''.join(file("10.txt").read().split()).decode("base64")
+	#print f
+	prev="\x00"*16
+	ans=''
+	for i in xrange(0,(len(f)/16)*16,16):
+		temp=f[i:i+16]
+		ans+=(c5(prev,AES.new("YELLOW SUBMARINE",AES.MODE_ECB).decrypt(c9(temp,16	)))).decode("hex")
+		prev=temp
+	#ans+=(c5(prev,c9(f[(len(f)/16)*16:],16))).decode("hex")
+	return ans
+
+# Challenge 11
+
 def c12():
 	key12=genkey()
 	def aes128(data):
@@ -200,14 +232,6 @@ def c12():
 	else:
 		pass
 
-def unpad(data):
-	c=ord(data[-1])
-	if data[-c:]==c*data[-1]:
-		return data[:-c]
-	elif ord(data[-1]) in range(16):
-		raise Exception
-	else:
-		return data
 
 def c13():
 	def parser(data):
@@ -239,6 +263,7 @@ def c13():
 	finald=decryptcookie(final)
 	print finald
 	print repr(b)
+
 def c14():
 	from random import randint
 	key14=genkey()
@@ -255,7 +280,6 @@ def c14():
 		if  temp[16:32]==temp[32:48]:
 			break
 		offset+=1
-
 
 	message="A"*15
 	n=len(aes128(''))-16
@@ -360,16 +384,6 @@ def c17():
 		final+= xor(ans,prev)
 		prev=block
 	print unpad(final)
-
-def ctren_de(key,nonce,data):
-	from pwn import p64
-	from Crypto.Cipher import AES
-	n=len(data)/16+1
-	cipher=''
-	a=AES.new(key,AES.MODE_ECB)
-	for i in xrange(n):
-		cipher+=xor(data[16*i:16*(i+1)],a.encrypt(p64(nonce)+p64(i)))
-	return cipher
 	
 def c18():
 	msg='L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=='.decode("base64")
@@ -397,9 +411,9 @@ def c19_20():
 	for i in xrange(len(temp)/n):
 		print temp[i*n:(i+1)*n]
 
-
 # skipping PRNG for now
 
+# set 4
 
 def c25():
 	key25=genkey()
@@ -465,4 +479,3 @@ def c27():
 	key_rec=xor(p[:16],p[-16:])
 	print repr(key27)
 	print repr(key_rec)
-
