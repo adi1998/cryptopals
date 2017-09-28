@@ -11,6 +11,10 @@ sys.setrecursionlimit(15000)
 p = 0xffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff 
 N = p
 
+def int_hex(n):
+	temp=hex(n)[2:].strip('L')
+	return '0'*(len(temp)%2) + temp
+
 def egcd(a, b):
     if a == 0:
         return (b, 0, 1)
@@ -402,10 +406,99 @@ def  c46():
 		else:
 			beg=mid
 		T = (int_hex(end).decode('hex').strip()).strip()
-		if T.startswith('Th'):
-			print (T)
-			print end-beg
-			time.sleep(0.02)
+		
+		print (T)
+			#print end-beg
+		time.sleep(0.01)
 		
 def c47():
-	pass
+
+	def PKCS_pad(m,k):
+		d=len(m)
+		if d>k-11:
+			raise ValueError
+		ps = ''.join([chr(int(urandom(1).encode('hex'),16) % 255 + 1) for _ in xrange(k-3-d)])
+		return "\x00\x02" + ps + '\x00' + m
+
+	def blind(key,c,s):
+		return key.encrypt(int_hex(s).decode('hex'))*c % key.n
+
+	def compute_M(M,s,B,n):
+		tM=[]
+		for a,b in M:
+			rL=(a*s[-1]-3*B+1+n-1)/n
+			rH=(b*s[-1]-2*B)/n+1
+			r=rL
+			while r <  rH:
+
+				tM.append((max(a,(2*B+r*n+s[-1]-1)/s[-1]),min(b,(3*b-1+n*r)/s[-1])))
+				if tM[-1][0]>tM[-1][1]:
+					tM.pop(-1)
+				r+=1
+		tM.sort()
+		return tM
+		sM=[tM[0]]
+		for i in tM[1:]:
+			if i[0]<=sM[-1][1]:
+				sM[-1]=(min(sM[-1][0],i[0]),max(i[1],sM[-1][1]))
+			else:
+				sM.append(i)
+		return sM
+
+	from RSA import RSAKey
+
+	bits = 768
+	key = RSAKey(bits,2**16+1)
+	n=key.n
+	B = 2**(8*(bits/8-2))
+	msg = PKCS_pad("This is a message for demonstrating the Bleichenbacher's PKCS padding oracle attack",bits/8)
+	c=key.encrypt(msg)
+	
+	s=[1]
+	M=[(2*B,3*B-1)]
+	C=[c]
+	i=1
+	while True:
+		#print i,len(M),M
+		if i==1:
+			s.append(n/(3*B))
+			while True:
+				temp = blind(key,c,s[1])
+				if key.PKCS_oracle(temp):
+					break
+				s[1]+=1
+				#print s[1]
+		elif i>1 and len(M)>=2 :
+			s.append(s[-1]+1)
+			while True:
+				temp = blind(key,c,s[-1])
+				if key.PKCS_oracle(temp):
+					break
+				s[-1]+=1
+		else:
+			a,b=M[0]
+			r = 2*(b*s[-1]-2*B+n-1)/n
+			while True:
+				f=0
+				sL=(2*B+r*n+b-1)/b
+				sH=(3*B+r*n+a-1)/a
+				j=sL
+				while j<sH:
+					j+=1
+					temp = blind(key,c,j)
+					if key.PKCS_oracle(temp):
+						s.append(j)
+						f=1
+						break
+				if f==1:
+					break
+				r+=1
+		#print 'lul'
+		M=compute_M(M,s,B,n)
+		print int_hex(M[0][1]).decode('hex')
+		if len(M)==1 and M[0][0]==M[0][1]:
+			ans = M[0][0]
+			break
+		i+=1
+
+c47()

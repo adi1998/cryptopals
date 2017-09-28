@@ -142,7 +142,7 @@ def c3(x):
 	m=0
 	ans=''
 	key=0
-	for i in xrange(256):
+	for i in xrange(32,127):
 		temp=''.join([chr(ord(j)^i) for j in s])
 		score=sum(map(lambda y:d.get(y,0),temp.upper()))
 		if score>m:
@@ -158,12 +158,15 @@ def c5(a,b):
 	return ''.join([chr(ord(a[i])^ord(b[i%len(b)])) for i in xrange(len(a))]).encode("hex")
 
 def c6():
-	msg=''.join(file("6.txt").read().split()).decode("base64")
+	#msg=''.join(file("6.txt").read().split()).decode("base64")
+	msg = "274c10121a0100495b502d551c557f0b0833585d1b27030b5228040d3753490a1c025415051525455118001911534a0052560a14594f0b1e490a010c4514411e070014615a181b02521b580305170002074b0a1a4c414d1f1d171d00151b1d0f480e491e0249010c150050115c505850434203421354424c1150430b5e094d144957080d4444254643".decode('hex')
 	keylen=1;
-	for i in xrange(2,30):
+	#msg = msg[:-32]
+	for i in xrange(2,50):
 		keylen=min(keylen,i, key=lambda y:normham(msg,y))
-		print normham(msg,i),i
+		#print normham(msg,i),i
 	print "Most probable keylength:",keylen	
+	keylen=(67)
 	blocks=[msg[i::keylen] for i in  xrange(keylen)]
 	fkey=[]
 	for b in blocks:
@@ -171,6 +174,8 @@ def c6():
 	print "Most probable key      :",repr(''.join(fkey))
 	print "Message:"
 	print c5(msg,fkey).decode("hex")
+
+c6()
 
 def c7():
 	from Crypto.Cipher import AES
