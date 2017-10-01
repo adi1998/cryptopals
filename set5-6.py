@@ -459,7 +459,6 @@ def c47():
 	C=[c]
 	i=1
 	while True:
-		#print i,len(M),M
 		if i==1:
 			s.append(n/(3*B))
 			while True:
@@ -493,7 +492,6 @@ def c47():
 				if f==1:
 					break
 				r+=1
-		#print 'lul'
 		M=compute_M(M,s,B,n)
 		print int_hex(M[0][1]).decode('hex')
 		if len(M)==1 and M[0][0]==M[0][1]:
