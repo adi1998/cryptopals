@@ -411,7 +411,7 @@ def  c46():
 			#print end-beg
 		time.sleep(0.01)
 		
-def c47():
+def c47_48():
 
 	def PKCS_pad(m,k):
 		d=len(m)
@@ -430,24 +430,16 @@ def c47():
 			rH=(b*s[-1]-2*B)/n+1
 			r=rL
 			while r <  rH:
-
 				tM.append((max(a,(2*B+r*n+s[-1]-1)/s[-1]),min(b,(3*b-1+n*r)/s[-1])))
 				if tM[-1][0]>tM[-1][1]:
 					tM.pop(-1)
 				r+=1
 		tM.sort()
 		return tM
-		sM=[tM[0]]
-		for i in tM[1:]:
-			if i[0]<=sM[-1][1]:
-				sM[-1]=(min(sM[-1][0],i[0]),max(i[1],sM[-1][1]))
-			else:
-				sM.append(i)
-		return sM
 
 	from RSA import RSAKey
 
-	bits = 768
+	bits = 1024
 	key = RSAKey(bits,2**16+1)
 	n=key.n
 	B = 2**(8*(bits/8-2))
@@ -459,7 +451,6 @@ def c47():
 	C=[c]
 	i=1
 	while True:
-		#print i,len(M),M
 		if i==1:
 			s.append(n/(3*B))
 			while True:
@@ -467,7 +458,6 @@ def c47():
 				if key.PKCS_oracle(temp):
 					break
 				s[1]+=1
-				#print s[1]
 		elif i>1 and len(M)>=2 :
 			s.append(s[-1]+1)
 			while True:
@@ -493,12 +483,10 @@ def c47():
 				if f==1:
 					break
 				r+=1
-		#print 'lul'
 		M=compute_M(M,s,B,n)
 		print int_hex(M[0][1]).decode('hex')
 		if len(M)==1 and M[0][0]==M[0][1]:
 			ans = M[0][0]
 			break
 		i+=1
-
-c47()
+	
