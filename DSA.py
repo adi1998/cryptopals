@@ -48,7 +48,7 @@ class DSA(object):
 		w = modinv(s,q)
 		u1 = (H(m)*w) % q
 		u2 = (r*w) % q
-		v = (pow(g,u1,p)*pow(self.y,u2,p)) % q
+		v = (pow(g,u1,p)*pow(self.y,u2,p) % p) % q
 		if v==r :
 			return True
 		else:
